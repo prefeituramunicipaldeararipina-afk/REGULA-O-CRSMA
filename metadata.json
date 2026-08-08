@@ -1,0 +1,6 @@
+{
+  "name": "Sistema de Regulação - CRSMA",
+  "description": "Sistema de Gestão e Regulação do Centro de Referência em Saúde da Mulher de Araripina com controle de agendamentos por eSF e sincronização com Google Sheets.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
