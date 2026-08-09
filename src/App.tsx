@@ -23,6 +23,7 @@ import {
   logoutCurrentSession,
   sendHeartbeat,
 } from './utils/sessionManager';
+import { fetchAgendamentosDirectSupabase, saveAgendamentosDirectSupabase } from './lib/supabase';
 
 const LOCAL_STORAGE_KEY_AGENDAMENTOS = 'crsma_agendamentos_v2';
 const LOCAL_STORAGE_KEY_PERFIL = 'crsma_perfil_usuario_v2';
@@ -140,7 +141,7 @@ export default function App() {
   const [selectedAppointment, setSelectedAppointment] = useState<Agendamento | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
-  // Sync agendamentos to local storage and send to central backend server API
+  // Sync agendamentos to local storage, central backend server API, and directly to Supabase
   useEffect(() => {
     localStorage.setItem(LOCAL_STORAGE_KEY_AGENDAMENTOS, JSON.stringify(agendamentos));
     fetch('/api/agendamentos', {
@@ -148,39 +149,54 @@ export default function App() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ agendamentos }),
     }).catch(() => {});
+
+    saveAgendamentosDirectSupabase(agendamentos).catch(() => {});
   }, [agendamentos]);
 
-  // Periodic real-time fetch from central backend API (/api/agendamentos) to sync across all browsers & users
+  // Periodic real-time fetch from central backend API (/api/agendamentos) or direct Supabase to sync across all browsers & users
   useEffect(() => {
     const fetchCentralAgendamentos = async () => {
+      let remoteAgendamentos: Agendamento[] | null = null;
+
       try {
         const res = await fetch('/api/agendamentos');
         if (res.ok) {
           const data = await res.json();
-          if (data.success) {
-            if (Array.isArray(data.agendamentos) && data.agendamentos.length > 0) {
-              setAgendamentos((prev) => {
-                const map = new Map<string, Agendamento>();
-                data.agendamentos.forEach((a: Agendamento) => map.set(a.id, a));
-                // Include any local records not yet on server
-                prev.forEach((a) => {
-                  if (!map.has(a.id)) map.set(a.id, a);
-                });
-                const merged = Array.from(map.values());
-                return JSON.stringify(merged) !== JSON.stringify(prev) ? merged : prev;
-              });
-            } else if ((!data.agendamentos || data.agendamentos.length === 0) && agendamentos.length > 0) {
-              // Seed server if file is empty
-              fetch('/api/agendamentos', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ agendamentos }),
-              }).catch(() => {});
-            }
+          if (data.success && Array.isArray(data.agendamentos) && data.agendamentos.length > 0) {
+            remoteAgendamentos = data.agendamentos;
           }
         }
       } catch (e) {
-        // Quiet fail if backend API is not running or on purely static host
+        // Express backend unavailable or static host
+      }
+
+      // Direct Supabase fallback if API returned nothing or failed
+      if (!remoteAgendamentos || remoteAgendamentos.length === 0) {
+        const directData = await fetchAgendamentosDirectSupabase();
+        if (directData && directData.length > 0) {
+          remoteAgendamentos = directData;
+        }
+      }
+
+      if (remoteAgendamentos && remoteAgendamentos.length > 0) {
+        setAgendamentos((prev) => {
+          const map = new Map<string, Agendamento>();
+          remoteAgendamentos!.forEach((a: Agendamento) => map.set(a.id, a));
+          // Include any local records not yet on remote
+          prev.forEach((a) => {
+            if (!map.has(a.id)) map.set(a.id, a);
+          });
+          const merged = Array.from(map.values());
+          return JSON.stringify(merged) !== JSON.stringify(prev) ? merged : prev;
+        });
+      } else if (agendamentos.length > 0) {
+        // Seed remote if remote is empty
+        fetch('/api/agendamentos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ agendamentos }),
+        }).catch(() => {});
+        saveAgendamentosDirectSupabase(agendamentos).catch(() => {});
       }
     };
 
