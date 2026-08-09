@@ -43,16 +43,11 @@ export const SpreadsheetView: React.FC<SpreadsheetViewProps> = ({
     }
   };
 
-  // Filtered Agendamentos (Solicitante sees ONLY their own unit's patients)
+  // Filtered Agendamentos (All regulated records visible to all profiles to prevent duplicate requests)
   const isSolicitante = perfilUsuario === 'SOLICITANTE';
   const userUnit = currentUser?.unidadeOuOrgao;
 
   const filteredAgendamentos = agendamentos.filter((a) => {
-    // Solicitante Unit Protection
-    if (isSolicitante && userUnit && a.esfOrigem !== userUnit) {
-      return false;
-    }
-
     const matchesSearch =
       a.pacienteNome.toLowerCase().includes(searchTerm.toLowerCase()) ||
       a.cpf.includes(searchTerm) ||
@@ -146,18 +141,16 @@ export const SpreadsheetView: React.FC<SpreadsheetViewProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Solicitante View Notice Banner */}
-      {isSolicitante && (
-        <div className="p-4 bg-blue-50/90 border border-blue-200 text-blue-900 rounded-xl text-xs flex items-start gap-3 shadow-2xs">
-          <ShieldAlert className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
-          <div>
-            <span className="font-extrabold text-blue-950 text-sm block">Acesso Restrito ao Perfil Solicitante</span>
-            <p className="text-xs text-blue-800 mt-0.5 leading-relaxed">
-              Você está visualizando exclusivamente as fichas reguladas da sua unidade de origem (<strong>{userUnit || 'Sua Unidade eSF'}</strong>). O acesso à lista completa unificada de todas as unidades municipais e distritos sanitários é exclusivo dos perfis <strong>Regulador (CRSMA)</strong> e <strong>Administrador</strong>.
-            </p>
-          </div>
+      {/* Unified Visibility Notice Banner */}
+      <div className="p-4 bg-teal-50/90 border border-teal-200 text-teal-950 rounded-xl text-xs flex items-start gap-3 shadow-2xs">
+        <CheckCircle className="w-5 h-5 text-teal-600 shrink-0 mt-0.5" />
+        <div>
+          <span className="font-extrabold text-teal-950 text-sm block">Visibilidade Unificada &bull; Prevenção de Duplicidade na Regulação</span>
+          <p className="text-xs text-teal-900 mt-0.5 leading-relaxed">
+            Todas as fichas reguladas e solicitações do município de Araripina estão visíveis para todos os perfis e unidades. Pesquise por CPF ou Cartão SUS no campo de busca abaixo para verificar se a paciente já possui regulação cadastrada em qualquer eSF ou no CRSMA.
+          </p>
         </div>
-      )}
+      </div>
 
       {/* Search & Filter Header Bar */}
       <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">

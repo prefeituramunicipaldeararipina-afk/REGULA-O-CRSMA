@@ -31,7 +31,7 @@ const LOCAL_STORAGE_KEY_USUARIOS = 'crsma_usuarios_v2';
 export default function App() {
   const [usuarios, setUsuarios] = useState<Usuario[]>(() => {
     const saved = localStorage.getItem(LOCAL_STORAGE_KEY_USUARIOS);
-    let loaded: Usuario[] = INITIAL_USUARIOS;
+    let loaded: Usuario[] = [];
     if (saved) {
       try {
         loaded = JSON.parse(saved);
@@ -39,20 +39,35 @@ export default function App() {
         console.error('Failed to parse saved usuarios', e);
       }
     }
-    // Guarantee admin user has CNES 223505 and password @900522We
-    const adminIndex = loaded.findIndex((u) => u.perfil === 'ADMINISTRADOR' || u.id === 'usr-adm-1');
-    if (adminIndex >= 0) {
-      loaded[adminIndex] = {
-        ...loaded[adminIndex],
-        cnesUnidade: '223505',
-        cpfOuCnes: '223505',
-        senha: '@900522We',
-        ativo: true,
-      };
-    } else {
-      loaded.unshift(INITIAL_USUARIOS[0]);
-    }
-    return loaded;
+
+    // Merge INITIAL_USUARIOS with saved users so all official logins exist
+    const mergedMap = new Map<string, Usuario>();
+
+    // 1. Load initial official users
+    INITIAL_USUARIOS.forEach((u) => {
+      mergedMap.set(u.cnesUnidade, u);
+    });
+
+    // 2. Merge saved state (preserve custom users and activity logs)
+    loaded.forEach((u) => {
+      if (u.cnesUnidade && mergedMap.has(u.cnesUnidade)) {
+        const official = mergedMap.get(u.cnesUnidade)!;
+        mergedMap.set(u.cnesUnidade, {
+          ...u,
+          nome: official.nome,
+          cnesUnidade: official.cnesUnidade,
+          cpfOuCnes: official.cpfOuCnes,
+          senha: official.senha,
+          perfil: official.perfil,
+          unidadeOuOrgao: official.unidadeOuOrgao,
+          ativo: true,
+        });
+      } else {
+        mergedMap.set(u.id || u.cnesUnidade, u);
+      }
+    });
+
+    return Array.from(mergedMap.values());
   });
 
   // Current logged in session & user
