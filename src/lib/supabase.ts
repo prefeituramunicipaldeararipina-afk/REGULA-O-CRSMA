@@ -14,7 +14,8 @@ function getValidJwtKey(...candidates: (string | undefined)[]): string {
 }
 
 const metaEnv = (import.meta as any).env || {};
-const supabaseUrl = metaEnv.VITE_SUPABASE_URL || DEFAULT_SUPABASE_URL;
+const rawSupabaseUrl = metaEnv.VITE_SUPABASE_URL || DEFAULT_SUPABASE_URL;
+const supabaseUrl = (rawSupabaseUrl || DEFAULT_SUPABASE_URL).trim().replace(/\/+$/, '');
 const supabaseAnonKey = getValidJwtKey(
   metaEnv.VITE_SUPABASE_ANON_KEY,
   metaEnv.VITE_SUPABASE_PUBLISHABLE_KEY,

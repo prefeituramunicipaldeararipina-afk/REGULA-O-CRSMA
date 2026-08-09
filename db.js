@@ -12,11 +12,13 @@ function getValidJwtKey(...candidates) {
   return DEFAULT_SUPABASE_ANON_KEY;
 }
 
-const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || DEFAULT_SUPABASE_URL;
+const rawUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || DEFAULT_SUPABASE_URL;
+const supabaseUrl = (rawUrl || DEFAULT_SUPABASE_URL).trim().replace(/\/+$/, '');
 const supabaseKey = getValidJwtKey(
   process.env.SUPABASE_ANON_KEY,
   process.env.SUPABASE_SERVICE_ROLE_KEY,
   process.env.VITE_SUPABASE_ANON_KEY,
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
   process.env.SUPABASE_SECRET_KEY,
   process.env.SUPABASE_PUBLISHABLE_KEY
 );
@@ -75,7 +77,7 @@ export async function getAgendamentosFromSupabase() {
       .select('*');
 
     if (error) {
-      console.error('Supabase fetch agendamentos error:', error.message);
+      console.warn('Supabase fetch agendamentos warning:', error.message);
       return null;
     }
     if (Array.isArray(data)) {
@@ -83,7 +85,7 @@ export async function getAgendamentosFromSupabase() {
     }
     return data;
   } catch (err) {
-    console.error('Supabase connection error:', err);
+    console.warn('Supabase connection warning:', err);
     return null;
   }
 }
@@ -120,12 +122,12 @@ export async function saveAgendamentosToSupabase(agendamentos) {
       .upsert(rows, { onConflict: 'id' });
 
     if (error) {
-      console.error('Supabase save agendamentos error:', error.message);
+      console.warn('Supabase save agendamentos warning:', error.message);
       return false;
     }
     return true;
   } catch (err) {
-    console.error('Supabase save error:', err);
+    console.warn('Supabase save warning:', err);
     return false;
   }
 }
@@ -141,12 +143,12 @@ export async function getUsuariosFromSupabase() {
       .select('*');
 
     if (error) {
-      console.error('Supabase fetch usuarios error:', error.message);
+      console.warn('Supabase fetch usuarios warning:', error.message);
       return null;
     }
     return data;
   } catch (err) {
-    console.error('Supabase fetch usuarios error:', err);
+    console.warn('Supabase fetch usuarios warning:', err);
     return null;
   }
 }
@@ -162,12 +164,12 @@ export async function saveUsuariosToSupabase(usuarios) {
       .upsert(usuarios, { onConflict: 'id' });
 
     if (error) {
-      console.error('Supabase save usuarios error:', error.message);
+      console.warn('Supabase save usuarios warning:', error.message);
       return false;
     }
     return true;
   } catch (err) {
-    console.error('Supabase save usuarios error:', err);
+    console.warn('Supabase save usuarios warning:', err);
     return false;
   }
 }
