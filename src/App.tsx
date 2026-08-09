@@ -140,10 +140,54 @@ export default function App() {
   const [selectedAppointment, setSelectedAppointment] = useState<Agendamento | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
-  // Sync state to local storage and broadcast updates
+  // Sync agendamentos to local storage and send to central backend server API
   useEffect(() => {
     localStorage.setItem(LOCAL_STORAGE_KEY_AGENDAMENTOS, JSON.stringify(agendamentos));
+    fetch('/api/agendamentos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ agendamentos }),
+    }).catch(() => {});
   }, [agendamentos]);
+
+  // Periodic real-time fetch from central backend API (/api/agendamentos) to sync across all browsers & users
+  useEffect(() => {
+    const fetchCentralAgendamentos = async () => {
+      try {
+        const res = await fetch('/api/agendamentos');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            if (Array.isArray(data.agendamentos) && data.agendamentos.length > 0) {
+              setAgendamentos((prev) => {
+                const map = new Map<string, Agendamento>();
+                data.agendamentos.forEach((a: Agendamento) => map.set(a.id, a));
+                // Include any local records not yet on server
+                prev.forEach((a) => {
+                  if (!map.has(a.id)) map.set(a.id, a);
+                });
+                const merged = Array.from(map.values());
+                return JSON.stringify(merged) !== JSON.stringify(prev) ? merged : prev;
+              });
+            } else if ((!data.agendamentos || data.agendamentos.length === 0) && agendamentos.length > 0) {
+              // Seed server if file is empty
+              fetch('/api/agendamentos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ agendamentos }),
+              }).catch(() => {});
+            }
+          }
+        }
+      } catch (e) {
+        // Quiet fail if backend API is not running or on purely static host
+      }
+    };
+
+    fetchCentralAgendamentos();
+    const interval = setInterval(fetchCentralAgendamentos, 4000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     localStorage.setItem(LOCAL_STORAGE_KEY_PERFIL, perfilUsuario);
@@ -151,6 +195,11 @@ export default function App() {
 
   useEffect(() => {
     localStorage.setItem(LOCAL_STORAGE_KEY_USUARIOS, JSON.stringify(usuarios));
+    fetch('/api/usuarios', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ usuarios }),
+    }).catch(() => {});
     window.dispatchEvent(new Event('crsma_usuarios_updated'));
   }, [usuarios]);
 

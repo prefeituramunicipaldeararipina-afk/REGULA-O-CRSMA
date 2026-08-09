@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
@@ -9,7 +10,67 @@ dotenv.config();
 const app = express();
 const PORT = 3000;
 
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+
+// Helper for persistent JSON file storage
+const DATA_DIR = path.join(process.cwd(), 'data_store');
+if (!fs.existsSync(DATA_DIR)) {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+
+const AGENDAMENTOS_FILE = path.join(DATA_DIR, 'agendamentos.json');
+const USUARIOS_FILE = path.join(DATA_DIR, 'usuarios.json');
+
+const readJsonFile = (filePath: string, fallback: any = []) => {
+  try {
+    if (fs.existsSync(filePath)) {
+      const content = fs.readFileSync(filePath, 'utf-8');
+      return JSON.parse(content);
+    }
+  } catch (err) {
+    console.error(`Error reading ${filePath}:`, err);
+  }
+  return fallback;
+};
+
+const writeJsonFile = (filePath: string, data: any) => {
+  try {
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+    return true;
+  } catch (err) {
+    console.error(`Error writing ${filePath}:`, err);
+    return false;
+  }
+};
+
+// API Routes for Central Data Synchronization
+app.get("/api/agendamentos", (req, res) => {
+  const agendamentos = readJsonFile(AGENDAMENTOS_FILE, null);
+  res.json({ success: true, agendamentos });
+});
+
+app.post("/api/agendamentos", (req, res) => {
+  const { agendamentos } = req.body;
+  if (Array.isArray(agendamentos)) {
+    writeJsonFile(AGENDAMENTOS_FILE, agendamentos);
+    return res.json({ success: true, count: agendamentos.length });
+  }
+  res.status(400).json({ success: false, error: 'Formato inválido para agendamentos' });
+});
+
+app.get("/api/usuarios", (req, res) => {
+  const usuarios = readJsonFile(USUARIOS_FILE, null);
+  res.json({ success: true, usuarios });
+});
+
+app.post("/api/usuarios", (req, res) => {
+  const { usuarios } = req.body;
+  if (Array.isArray(usuarios)) {
+    writeJsonFile(USUARIOS_FILE, usuarios);
+    return res.json({ success: true, count: usuarios.length });
+  }
+  res.status(400).json({ success: false, error: 'Formato inválido para usuários' });
+});
 
 // Initialize Gemini Client server-side
 const ai = new GoogleGenAI({
