@@ -207,7 +207,10 @@ export default function App() {
 
   useEffect(() => {
     localStorage.setItem(LOCAL_STORAGE_KEY_PERFIL, perfilUsuario);
-  }, [perfilUsuario]);
+    if (perfilUsuario === 'SOLICITANTE' && (activeTab === 'audit' || activeTab === 'serviceExecution')) {
+      setActiveTab('home');
+    }
+  }, [perfilUsuario, activeTab]);
 
   useEffect(() => {
     localStorage.setItem(LOCAL_STORAGE_KEY_USUARIOS, JSON.stringify(usuarios));

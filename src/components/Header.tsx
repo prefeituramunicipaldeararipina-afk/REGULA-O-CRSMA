@@ -78,19 +78,21 @@ export const Header: React.FC<HeaderProps> = ({
               {perfilUsuario === 'REGULADOR' && <span className="text-[9px] bg-emerald-500 text-white px-1 rounded">Agendamento Liberado</span>}
             </button>
 
-            <button
-              onClick={() => setPerfilUsuario('ADMINISTRADOR')}
-              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-md transition-all ${
-                perfilUsuario === 'ADMINISTRADOR'
-                  ? 'bg-purple-600 text-white shadow-xs ring-1 ring-purple-400/30'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
-              }`}
-              title="Perfil Administrador: poder total + cadastro e gestão de usuários de ambos os perfis"
-            >
-              <Shield className="w-3.5 h-3.5" />
-              <span>Administrador (SMS)</span>
-              {perfilUsuario === 'ADMINISTRADOR' && <span className="text-[9px] bg-purple-500 text-white px-1 rounded">Gestão de Usuários</span>}
-            </button>
+            {perfilUsuario !== 'SOLICITANTE' && (
+              <button
+                onClick={() => setPerfilUsuario('ADMINISTRADOR')}
+                className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-md transition-all ${
+                  perfilUsuario === 'ADMINISTRADOR'
+                    ? 'bg-purple-600 text-white shadow-xs ring-1 ring-purple-400/30'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
+                }`}
+                title="Perfil Administrador: poder total + cadastro e gestão de usuários de ambos os perfis"
+              >
+                <Shield className="w-3.5 h-3.5" />
+                <span>Administrador (SMS)</span>
+                {perfilUsuario === 'ADMINISTRADOR' && <span className="text-[9px] bg-purple-500 text-white px-1 rounded">Gestão de Usuários</span>}
+              </button>
+            )}
           </div>
 
           {/* Download Projeto ZIP (Exclusivo Administrador) */}

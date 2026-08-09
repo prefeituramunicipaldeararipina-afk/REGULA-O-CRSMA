@@ -84,6 +84,19 @@ export const AuditReportView: React.FC<AuditReportViewProps> = ({
   perfilUsuario,
   setPerfilUsuario,
 }) => {
+  if (perfilUsuario === 'SOLICITANTE') {
+    return (
+      <div className="p-8 rounded-2xl bg-white border border-slate-200 text-center space-y-4 max-w-2xl mx-auto my-12 shadow-xs">
+        <div className="w-16 h-16 bg-purple-100 text-purple-700 rounded-full flex items-center justify-center mx-auto">
+          <Shield className="w-8 h-8" />
+        </div>
+        <h3 className="text-lg font-extrabold text-slate-900">Acesso Restrito ao Painel de Auditoria</h3>
+        <p className="text-xs text-slate-600 leading-relaxed">
+          O Painel de Auditoria e Relatórios Técnicos está disponível exclusivamente para os perfis de <strong>Administrador</strong> e <strong>Regulador</strong>.
+        </p>
+      </div>
+    );
+  }
   // Audit Header Configuration State
   const [auditNumber, setAuditNumber] = useState('AUD-CRSMA-2026-0048');
   const [auditDate, setAuditDate] = useState(new Date().toISOString().split('T')[0]);

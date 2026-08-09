@@ -105,6 +105,19 @@ export const ServiceExecutionView: React.FC<ServiceExecutionViewProps> = ({
   perfilUsuario,
   currentUser,
 }) => {
+  if (perfilUsuario === 'SOLICITANTE') {
+    return (
+      <div className="p-8 rounded-2xl bg-white border border-slate-200 text-center space-y-4 max-w-2xl mx-auto my-12 shadow-xs">
+        <div className="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto">
+          <CheckSquare className="w-8 h-8" />
+        </div>
+        <h3 className="text-lg font-extrabold text-slate-900">Acesso Restrito à Execução do Serviço</h3>
+        <p className="text-xs text-slate-600 leading-relaxed">
+          A área de Execução do Serviço (Presença, Remarcação & Faturamento BPA) está disponível exclusivamente para os perfis de <strong>Administrador</strong> e <strong>Regulador</strong>.
+        </p>
+      </div>
+    );
+  }
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState<string>('TODAS');
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>('TODOS');

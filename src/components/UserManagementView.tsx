@@ -212,14 +212,6 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
               <ShieldCheck className="w-4 h-4" />
               <span>Ativar Regulador</span>
             </button>
-            <button
-              onClick={() => setPerfilUsuario('ADMINISTRADOR')}
-              className="px-3 py-2 bg-purple-600/20 border border-purple-500/40 hover:bg-purple-600 text-purple-200 hover:text-white font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
-              title="Ativar perfil administrador para gerenciar usuários"
-            >
-              <Shield className="w-4 h-4" />
-              <span>Ativar Administrador</span>
-            </button>
           </div>
         )}
       </div>

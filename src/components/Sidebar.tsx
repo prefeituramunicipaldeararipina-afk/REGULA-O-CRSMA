@@ -129,8 +129,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
     },
   ];
 
-  // All tabs are accessible to all user profiles to guarantee full visibility and prevent duplicate registrations
-  const filteredMenuItems = menuItems;
+  // Filter menu items by profile: Painel de Auditoria and Execução do Serviço are available only for ADMINISTRADOR and REGULADOR
+  const filteredMenuItems = menuItems.filter((item) => {
+    if (item.id === 'audit' || item.id === 'serviceExecution') {
+      return perfilUsuario === 'ADMINISTRADOR' || perfilUsuario === 'REGULADOR';
+    }
+    return true;
+  });
 
   const getPerfilDetails = (perfil: PerfilUsuario) => {
     switch (perfil) {
