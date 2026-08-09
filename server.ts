@@ -43,34 +43,61 @@ const writeJsonFile = (filePath: string, data: any) => {
   }
 };
 
-// API Routes for Central Data Synchronization
-app.get("/api/agendamentos", (req, res) => {
+import { 
+  getAgendamentosFromSupabase, 
+  saveAgendamentosToSupabase, 
+  getUsuariosFromSupabase, 
+  saveUsuariosToSupabase,
+  supabase 
+} from "./db.js";
+
+// API Routes for Central Data Synchronization (Supabase + Local Fallback)
+app.get("/api/agendamentos", async (req, res) => {
+  if (supabase) {
+    const supabaseData = await getAgendamentosFromSupabase();
+    if (supabaseData !== null) {
+      return res.json({ success: true, agendamentos: supabaseData, source: 'supabase' });
+    }
+  }
   const agendamentos = readJsonFile(AGENDAMENTOS_FILE, null);
-  res.json({ success: true, agendamentos });
+  res.json({ success: true, agendamentos, source: 'local' });
 });
 
-app.post("/api/agendamentos", (req, res) => {
+app.post("/api/agendamentos", async (req, res) => {
   const { agendamentos } = req.body;
   if (Array.isArray(agendamentos)) {
     writeJsonFile(AGENDAMENTOS_FILE, agendamentos);
+    if (supabase) {
+      await saveAgendamentosToSupabase(agendamentos);
+    }
     return res.json({ success: true, count: agendamentos.length });
   }
   res.status(400).json({ success: false, error: 'Formato inválido para agendamentos' });
 });
 
-app.get("/api/usuarios", (req, res) => {
+app.get("/api/usuarios", async (req, res) => {
+  if (supabase) {
+    const supabaseData = await getUsuariosFromSupabase();
+    if (supabaseData !== null) {
+      return res.json({ success: true, usuarios: supabaseData, source: 'supabase' });
+    }
+  }
   const usuarios = readJsonFile(USUARIOS_FILE, null);
-  res.json({ success: true, usuarios });
+  res.json({ success: true, usuarios, source: 'local' });
 });
 
-app.post("/api/usuarios", (req, res) => {
+app.post("/api/usuarios", async (req, res) => {
   const { usuarios } = req.body;
   if (Array.isArray(usuarios)) {
     writeJsonFile(USUARIOS_FILE, usuarios);
+    if (supabase) {
+      await saveUsuariosToSupabase(usuarios);
+    }
     return res.json({ success: true, count: usuarios.length });
   }
   res.status(400).json({ success: false, error: 'Formato inválido para usuários' });
 });
+
 
 // Initialize Gemini Client server-side
 const ai = new GoogleGenAI({
