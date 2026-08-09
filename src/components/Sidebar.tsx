@@ -129,15 +129,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
     },
   ];
 
-  const filteredMenuItems = menuItems.filter((item) => {
-    if (item.id === 'queue' || item.id === 'serviceExecution') {
-      return perfilUsuario === 'ADMINISTRADOR' || perfilUsuario === 'REGULADOR';
-    }
-    if (item.id === 'audit') {
-      return perfilUsuario === 'ADMINISTRADOR';
-    }
-    return true;
-  });
+  // All tabs are accessible to all user profiles to guarantee full visibility and prevent duplicate registrations
+  const filteredMenuItems = menuItems;
 
   const getPerfilDetails = (perfil: PerfilUsuario) => {
     switch (perfil) {
